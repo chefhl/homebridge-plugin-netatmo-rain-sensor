@@ -6,6 +6,7 @@ import {
   Service,
 } from 'homebridge';
 import { setInterval } from 'node:timers';
+import netatmo from 'netatmo';
 
 let hap: HAP;
 
@@ -14,16 +15,15 @@ module.exports = (api: API) => {
 };
 
 class VirtualLeakSensor {
-  private readonly api: API;
   private readonly logging: Logging;
   private readonly accessoryConfigName: string;
   private readonly leakSensorService: Service;
   private readonly accessoryInformationService;
+  private readonly netatmoApi: netatmo;
   private rainDetected: boolean;
 
-  constructor(logging: Logging, accessoryConfig: AccessoryConfig, api: API) {
+  constructor(logging: Logging, accessoryConfig: AccessoryConfig) {
     this.logging = logging;
-    this.api = api;
     this.accessoryConfigName = accessoryConfig.name;
 
     this.rainDetected = false;
@@ -40,10 +40,26 @@ class VirtualLeakSensor {
     this.leakSensorService.getCharacteristic(hap.Characteristic.LeakDetected)
       .onGet(this.handleLeakDetectedGet.bind(this));
 
+    // Authenticate with the Netatmo API
+    this.netatmoApi = this.authenticateNetatmo(accessoryConfig);
+
     // Create recurring timer for Netatmo API polling
     const pollingIntervalInMs = accessoryConfig.pollingInterval;
     this.logging.debug('Setting Netatmo API polling interval to %d ms', pollingIntervalInMs);
     setInterval(this.pollNetatmoApi, pollingIntervalInMs);
+  }
+
+  authenticateNetatmo(accessoryConfig: AccessoryConfig): netatmo {
+    const auth = {
+      'client_id': accessoryConfig.netatmoClientId,
+      'client_secret': accessoryConfig.netatmoClientSecret,
+      'username': accessoryConfig.netatmoUsername,
+      'password': accessoryConfig.netatmoPassword,
+    };
+
+    const api = new netatmo(auth);
+
+    return api;
   }
 
   pollNetatmoApi() {

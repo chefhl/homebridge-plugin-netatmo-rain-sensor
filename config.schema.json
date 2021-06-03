@@ -19,6 +19,30 @@
         "minimum": 30,
         "maximum": 3600,
         "description": "Defines the interval used for polling the Netatmo API. Keep in mind that currently the Netatmo Rain Sensor is only updating the data on the API every 10 minutes. So the maximum lag for rain detection is currently 10 minutes plus this number of seconds. Also keep in mind that Netatmo might block your developer account if you poll too often. Therefore the minimum polling interval of 30 seconds which should be safe."
+      },
+      "netatmoClientId": {
+        "title": "Netatmo developer client ID",
+        "type": "string",
+        "required": true,
+        "description": "Create this at https://dev.netatmo.com/"
+      },
+      "netatmoClientSecret": {
+        "title": "Netatmo developer client secret",
+        "type": "string",
+        "required": true,
+        "description": "Create this at https://dev.netatmo.com/"
+      },
+      "netatmoUsername": {
+        "title": "Netatmo Username",
+        "type": "string",
+        "required": true,
+        "description": "Your Netatmo username"
+      },
+      "netatmoPassword": {
+        "title": "Netatmo Password",
+        "type": "string",
+        "required": true,
+        "description": "Your Netatmo password"
       }
     }
   }
