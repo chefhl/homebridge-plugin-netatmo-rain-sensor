@@ -19,14 +19,14 @@ class VirtualLeakSensor {
   private readonly accessoryConfigName: string;
   private readonly leakSensorService: Service;
   private readonly accessoryInformationService;
-  private leakDetected: boolean;
+  private rainDetected: boolean;
 
   constructor(logging: Logging, accessoryConfig: AccessoryConfig, api: API) {
     this.logging = logging;
     this.api = api;
     this.accessoryConfigName = accessoryConfig.name;
 
-    this.leakDetected = false;
+    this.rainDetected = false;
 
     // Create a new Leak Sensor Service
     this.leakSensorService = new hap.Service.LeakSensor(this.accessoryConfigName);
@@ -46,7 +46,7 @@ class VirtualLeakSensor {
     setInterval(this.pollNetatmoApi, pollingIntervalInMs);
   }
 
-  pollNetatmoApi(): void {
+  pollNetatmoApi() {
     this.logging.debug('Polling the Netatmo API');
   }
 
@@ -57,15 +57,18 @@ class VirtualLeakSensor {
     ];
   }
 
-  /**
-   * Handle requests to get the current value of the "Leak Detected" characteristic
-   */
   handleLeakDetectedGet() {
-    this.logging.debug('Triggered GET LeakDetected');
+    this.logging.debug('Homebridge triggered LeakDetectedGet');
 
-    // set this to a valid value for LeakDetected
-    const currentValue = hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+    if(this.rainDetected) {
+      this.logging.debug('Rain detected!');
 
-    return currentValue;
+      // Reset rain detection state until next Netatmo API polling
+      this.rainDetected = false;
+      return hap.Characteristic.LeakDetected.LEAK_DETECTED;
+    } else {
+      this.logging.debug('No rain detected');
+      return hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+    }
   }
 }
