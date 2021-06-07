@@ -20,18 +20,21 @@ class VirtualLeakSensor implements AccessoryPlugin {
   private readonly logging: Logging;
   private readonly leakSensorService: Service;
   private readonly accessoryInformationService: Service;
-  private readonly pollingInterval: number;
+  private readonly pollingIntervalInSec: number;
   private netatmoApi: netatmo;
   private netatmoStationId?: string;
   private netatmoRainSensorId?: string;
   private rainDetected: boolean;
+  private isFullyInitialized: boolean;
 
-  constructor(logging: Logging, accessoryConfig: AccessoryConfig, api: API) {
+  constructor(logging: Logging, accessoryConfig: AccessoryConfig) {
     this.logging = logging;
     this.netatmoStationId = undefined;
     this.netatmoRainSensorId = undefined;
     this.rainDetected = false;
-    this.pollingInterval = accessoryConfig.pollingInterval;
+    this.pollingIntervalInSec = accessoryConfig.pollingInterval;
+    this.isFullyInitialized = false;
+
     this.logging.debug('Constructing virtual leak sensor');
 
     // Create a new Leak Sensor Service
@@ -50,19 +53,12 @@ class VirtualLeakSensor implements AccessoryPlugin {
 
     // Authenticate with the Netatmo API and configure callbacks
     this.netatmoApi = this.authenticateAndConfigureNetatmoApi(accessoryConfig);
-
-    api.on('didFinishLaunching', this.afterLaunch);
-  }
-
-  afterLaunch() {
-    // Check for existence of Netatmo rain sensor
-    this.netatmoApi.getStationsData();
   }
 
   getDevices(_error, devices): void {
-    //this.logging.debug('getDevices called');
-    devices.array.forEach(device => {
-      device.modules.array.forEach(module => {
+    this.logging.debug('getDevices called');
+    devices.forEach(device => {
+      device.modules.forEach(module => {
         if(module.type === 'NAModule3') {
           this.logging.debug(`Found at least one Netatmo Rain Sensor named ${module.module_name}`);
           this.netatmoStationId = device._id;
@@ -72,9 +68,9 @@ class VirtualLeakSensor implements AccessoryPlugin {
     });
     if(this.netatmoRainSensorId !== undefined) {
       // Create recurring timer for Netatmo API polling
-      const pollingIntervalInMs = this.pollingInterval;
+      const pollingIntervalInMs = this.pollingIntervalInSec * 1000;
       this.logging.debug(`Setting Netatmo API polling interval to ${pollingIntervalInMs} ms`);
-      setInterval(this.pollNetatmoApi, pollingIntervalInMs);
+      setInterval(this.pollNetatmoApi.bind(this), pollingIntervalInMs);
     } else {
       this.logging.error('No Netatmo Rain Sensor found.');
     }
@@ -82,13 +78,17 @@ class VirtualLeakSensor implements AccessoryPlugin {
 
   getMeasures(_error, measures): void {
     this.logging.debug('getMeasures called');
+    this.logging.debug(`Native output of measures ${JSON.stringify(measures)}`);
     let rainAmount = 0;
-    measures.value.array.forEach(measuredValue => {
-      rainAmount += measuredValue[0];
+    measures.forEach(measure => {
+      measure.value[0].forEach(measuredValue => {
+        rainAmount += measuredValue[0];
+      });
     });
+
     if(rainAmount > 0) {
       this.rainDetected = true;
-      this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, hap.Characteristic.LeakDetected.LEAK_DETECTED);
+      this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
     }
   }
 
@@ -102,13 +102,13 @@ class VirtualLeakSensor implements AccessoryPlugin {
 
     const netatmoApi = new netatmo(auth);
 
-    netatmoApi.on('error', this.handleNetatmoApiError);
+    netatmoApi.on('error', this.handleNetatmoApiError.bind(this));
 
-    netatmoApi.on('warning', this.handleNetatmoApiWarning);
+    netatmoApi.on('warning', this.handleNetatmoApiWarning.bind(this));
 
-    netatmoApi.on('get-stationsdata', this.getDevices);
+    netatmoApi.on('get-stationsdata', this.getDevices.bind(this));
 
-    netatmoApi.on('get-measure', this.getMeasures);
+    netatmoApi.on('get-measure', this.getMeasures.bind(this));
 
     return netatmoApi;
   }
@@ -124,17 +124,17 @@ class VirtualLeakSensor implements AccessoryPlugin {
   pollNetatmoApi(): void {
     this.logging.debug('Polling the Netatmo API');
     const now = new Date().getTime();
-    const thirtyMinutesInMillis = 30 * 60 * 1000;
+    const fortyMinutesInMillis = 40 * 60 * 1000;
     const options = {
       device_id: this.netatmoStationId,
       module_id: this.netatmoRainSensorId,
       scale: '30min',
       type: ['rain'],
-      date_begin: new Date(now - thirtyMinutesInMillis).getTime(),
-      date_end: now,
+      date_begin: Math.floor(new Date(now - fortyMinutesInMillis).getTime()/1000),
       optimize: true,
       real_time: true,
     };
+    this.logging.debug(JSON.stringify(options));
     this.netatmoApi.getMeasure(options);
   }
 
@@ -146,12 +146,18 @@ class VirtualLeakSensor implements AccessoryPlugin {
   }
 
   handleStatusActiveGet(): boolean {
-    this.logging.debug('Homebridge triggered StatusActiveGet');
+    this.logging.debug('Homebridge triggered StatusActiveGet. Always returns true');
     return true;
   }
 
   handleLeakDetectedGet(): number {
-    this.logging.debug('Homebridge triggered LeakDetectedGet');
+    if(!this.isFullyInitialized) {
+      this.logging.debug('Homebridge triggered LeakDetectedGet for the first time');
+      this.logging.debug('Looking for Netatmo Rain Sensor and setup polling schedule');
+      this.netatmoApi.getStationsData();
+    }
+
+    this.logging.debug('Homebridge ot Netatmo polling triggered LeakDetectedGet');
 
     if(this.rainDetected) {
       this.logging.debug('Rain detected!');
