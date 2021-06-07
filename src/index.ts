@@ -79,17 +79,18 @@ class VirtualLeakSensor implements AccessoryPlugin {
   getMeasures(_error, measures): void {
     this.logging.debug('getMeasures called');
     this.logging.debug(`Native output of measures ${JSON.stringify(measures)}`);
-    let rainAmount = 0;
+
+    let rainAmount = 0.0;
+
     measures.forEach(measure => {
       measure.value[0].forEach(measuredValue => {
-        rainAmount += measuredValue[0];
+        rainAmount = rainAmount + measuredValue;
       });
     });
 
-    if(rainAmount > 0) {
-      this.rainDetected = true;
-      this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
-    }
+    this.logging.debug(`Rain amount sum: ${rainAmount}`);
+    this.rainDetected = rainAmount > 0;
+    this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
   }
 
   authenticateAndConfigureNetatmoApi(accessoryConfig: AccessoryConfig): netatmo {
@@ -124,13 +125,13 @@ class VirtualLeakSensor implements AccessoryPlugin {
   pollNetatmoApi(): void {
     this.logging.debug('Polling the Netatmo API');
     const now = new Date().getTime();
-    const fortyMinutesInMillis = 40 * 60 * 1000;
+    const sixtyMinutesInMillis = 60 * 60 * 1000;
     const options = {
       device_id: this.netatmoStationId,
       module_id: this.netatmoRainSensorId,
       scale: '30min',
       type: ['rain'],
-      date_begin: Math.floor(new Date(now - fortyMinutesInMillis).getTime()/1000),
+      date_begin: Math.floor(new Date(now - sixtyMinutesInMillis).getTime()/1000),
       optimize: true,
       real_time: true,
     };
@@ -155,15 +156,13 @@ class VirtualLeakSensor implements AccessoryPlugin {
       this.logging.debug('Homebridge triggered LeakDetectedGet for the first time');
       this.logging.debug('Looking for Netatmo Rain Sensor and setup polling schedule');
       this.netatmoApi.getStationsData();
+      this.isFullyInitialized = true;
     }
 
     this.logging.debug('Homebridge ot Netatmo polling triggered LeakDetectedGet');
 
     if(this.rainDetected) {
       this.logging.debug('Rain detected!');
-
-      // Reset rain detection state until next Netatmo API polling
-      this.rainDetected = false;
       return hap.Characteristic.LeakDetected.LEAK_DETECTED;
     } else {
       this.logging.debug('No rain detected');
