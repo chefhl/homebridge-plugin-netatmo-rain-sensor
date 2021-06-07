@@ -80,16 +80,19 @@ class VirtualLeakSensor implements AccessoryPlugin {
     this.logging.debug('getMeasures called');
     this.logging.debug(`Native output of measures ${JSON.stringify(measures)}`);
 
-    let rainAmount = 0.0;
+    //let rainAmount = 0.0;
+    this.rainDetected = false;
 
     measures.forEach(measure => {
-      measure.value[0].forEach(measuredValue => {
-        rainAmount = rainAmount + measuredValue;
+      measure.value.forEach(measuredValue => {
+        if(measuredValue > 0) {
+          this.rainDetected = true;
+        }
       });
     });
 
-    this.logging.debug(`Rain amount sum: ${rainAmount}`);
-    this.rainDetected = rainAmount > 0;
+    //this.logging.debug(`Rain amount sum: ${rainAmount}`);
+    //this.rainDetected = rainAmount > 0;
     this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
   }
 
