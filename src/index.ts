@@ -21,6 +21,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
   private readonly leakSensorService: Service;
   private readonly accessoryInformationService: Service;
   private readonly pollingIntervalInSec: number;
+  private readonly slidingWindowSizeInMinutes: number;
   private netatmoApi: netatmo;
   private netatmoStationId?: string;
   private netatmoRainSensorId?: string;
@@ -34,6 +35,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
     this.rainDetected = false;
     this.pollingIntervalInSec = accessoryConfig.pollingInterval;
     this.isFullyInitialized = false;
+    this.slidingWindowSizeInMinutes = accessoryConfig.slidingWindowSize;
 
     this.logging.debug('Constructing virtual leak sensor');
 
@@ -53,6 +55,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
 
     // Authenticate with the Netatmo API and configure callbacks
     this.netatmoApi = this.authenticateAndConfigureNetatmoApi(accessoryConfig);
+    this.netatmoApi;
   }
 
   getDevices(_error, devices): void {
@@ -80,7 +83,6 @@ class VirtualLeakSensor implements AccessoryPlugin {
     this.logging.debug('getMeasures called');
     this.logging.debug(`Native output of measures ${JSON.stringify(measures)}`);
 
-    //let rainAmount = 0.0;
     this.rainDetected = false;
 
     measures.forEach(measure => {
@@ -91,8 +93,6 @@ class VirtualLeakSensor implements AccessoryPlugin {
       });
     });
 
-    //this.logging.debug(`Rain amount sum: ${rainAmount}`);
-    //this.rainDetected = rainAmount > 0;
     this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
   }
 
@@ -128,13 +128,14 @@ class VirtualLeakSensor implements AccessoryPlugin {
   pollNetatmoApi(): void {
     this.logging.debug('Polling the Netatmo API');
     const now = new Date().getTime();
-    const sixtyMinutesInMillis = 60 * 60 * 1000;
+    const slidingWindowSizeInMillis = this.slidingWindowSizeInMinutes * 60 * 1000;
+    this.logging.debug(`Sliding window size in milliseconds:${slidingWindowSizeInMillis}`);
     const options = {
       device_id: this.netatmoStationId,
       module_id: this.netatmoRainSensorId,
       scale: '30min',
       type: ['rain'],
-      date_begin: Math.floor(new Date(now - sixtyMinutesInMillis).getTime()/1000),
+      date_begin: Math.floor(new Date(now - slidingWindowSizeInMillis).getTime()/1000),
       optimize: true,
       real_time: true,
     };

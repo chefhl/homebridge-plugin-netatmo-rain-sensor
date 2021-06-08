@@ -11,14 +11,17 @@
         "required": true,
         "default": "Homebridge Netatmo Rain Sensor"
       },
-      "pollingInterval": {
-        "title": "Netatmo API polling interval in seconds",
-        "type": "integer",
+      "netatmoUsername": {
+        "title": "Netatmo Username",
+        "type": "string",
         "required": true,
-        "default": 60,
-        "minimum": 30,
-        "maximum": 3600,
-        "description": "Defines the interval used for polling the Netatmo API. Keep in mind that currently the Netatmo Rain Sensor is only updating the data on the API every 10 minutes. So the maximum lag for rain detection is currently 10 minutes plus this number of seconds. Also keep in mind that Netatmo might block your developer account if you poll too often. Therefore the minimum polling interval of 30 seconds which should be safe."
+        "description": "Your Netatmo account username"
+      },
+      "netatmoPassword": {
+        "title": "Netatmo Password",
+        "type": "string",
+        "required": true,
+        "description": "Your Netatmo account password"
       },
       "netatmoClientId": {
         "title": "Netatmo developer client ID",
@@ -32,17 +35,30 @@
         "required": true,
         "description": "Create this at https://dev.netatmo.com/"
       },
-      "netatmoUsername": {
-        "title": "Netatmo Username",
-        "type": "string",
+      "pollingInterval": {
+        "title": "Netatmo API polling interval in minutes",
+        "type": "integer",
         "required": true,
-        "description": "Your Netatmo username"
+        "default": 60,
+        "oneOf": [
+          { "title": "1", "enum": [60] },
+          { "title": "10", "enum": [600] },
+          { "title": "30", "enum": [1800] },
+          { "title": "60", "enum": [3600] }
+        ],
+        "description": "Defines the interval used for polling the Netatmo API. Keep in mind that currently the Netatmo Rain Sensor is only updating the data on the API every 10 minutes. So the maximum lag for rain detection is currently 10 minutes plus this number of minutes. Also keep in mind that Netatmo might block your developer account if you poll too often. Therefore the minimum polling interval of 1 minute which should be safe."
       },
-      "netatmoPassword": {
-        "title": "Netatmo Password",
-        "type": "string",
+      "slidingWindowSize": {
+        "title": "Sliding Window Size in minutes",
+        "type": "integer",
+        "default": 30,
+        "oneOf": [
+          { "title": "30", "enum": [30] },
+          { "title": "60", "enum": [60] },
+          { "title": "120", "enum": [120] }
+        ],
         "required": true,
-        "description": "Your Netatmo password"
+        "description": "This interval defines the minimum time that a rain detection state will be active. Keep in mind that Netatmo accumulates Rain Sensor values to slices of 30 minutes. Therefore the values for this parameter are multiples of 30 minutes."
       }
     }
   }
