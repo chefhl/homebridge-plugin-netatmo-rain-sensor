@@ -13,6 +13,9 @@ There are a couple of limitations to the Netatmo Rain Sensor and its respective 
 * The rain information is accumulated for 30 minutes.
   *  This means that this plugin will report rain for at least 30 minutes even if it just rained for e.g. 5 minutes.
 
+## Installation
+TODO
+
 ## Plugin Configuration in Homebridge
 TODO
 
