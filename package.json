@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Homebridge Netatmo Rain Sensor",
   "name": "homebridge-plugin-netatmo-rain-sensor",
   "version": "1.0.0",
