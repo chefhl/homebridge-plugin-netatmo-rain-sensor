@@ -27,6 +27,7 @@
   ],
   "files": [
     "LICENSE",
+    "config.schema.json",
     "dist"
   ],
   "dependencies": {},
