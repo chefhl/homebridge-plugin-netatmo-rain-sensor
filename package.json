@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Netatmo Rain Sensor",
   "name": "homebridge-plugin-netatmo-rain-sensor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "This project aims to provide a virtual HomeKit (R) device as a wrapper for the Netatmo (R) Rain Sensor wrapped as a HomeKit (R) Flood Sensor to provide rain alerts.",
   "license": "Apache-2.0",
   "repository": {
