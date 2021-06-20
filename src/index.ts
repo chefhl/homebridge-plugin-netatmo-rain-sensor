@@ -22,18 +22,24 @@ class VirtualLeakSensor implements AccessoryPlugin {
   private readonly accessoryInformationService: Service;
   private readonly pollingIntervalInSec: number;
   private readonly slidingWindowSizeInMinutes: number;
+  private readonly reauthenticationIntervalInMs: number;
   private netatmoApi: netatmo;
   private netatmoStationId?: string;
   private netatmoRainSensorId?: string;
   private rainDetected: boolean;
+  private accessoryConfig: AccessoryConfig;
 
   constructor(logging: Logging, accessoryConfig: AccessoryConfig) {
     this.logging = logging;
+    this.accessoryConfig = accessoryConfig;
     this.netatmoStationId = undefined;
     this.netatmoRainSensorId = undefined;
     this.rainDetected = false;
     this.pollingIntervalInSec = accessoryConfig.pollingInterval;
     this.slidingWindowSizeInMinutes = accessoryConfig.slidingWindowSize;
+
+    // Reauthenticate Netatmo API every 24 hours
+    this.reauthenticationIntervalInMs = 24 * 60 * 60 * 1000;
 
     // Create a new Leak Sensor Service
     this.leakSensorService = new hap.Service.LeakSensor(accessoryConfig.name);
@@ -67,6 +73,9 @@ class VirtualLeakSensor implements AccessoryPlugin {
       });
     });
     if(this.netatmoRainSensorId !== undefined) {
+      // Create recurring timer for Netatmo API reauthentication
+      setInterval(this.forceReauthenticationOfNetatmoApi.bind(this), this.reauthenticationIntervalInMs);
+
       // Create recurring timer for Netatmo API polling
       const pollingIntervalInMs = this.pollingIntervalInSec * 1000;
       this.logging.debug(`Setting Netatmo API polling interval to ${pollingIntervalInMs}ms.`);
@@ -93,6 +102,19 @@ class VirtualLeakSensor implements AccessoryPlugin {
     this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
   }
 
+  forceReauthenticationOfNetatmoApi(): void {
+    this.logging.debug('Reauthentication Netatmo API');
+    this.shutdownNetatmoApi(this.netatmoApi);
+    this.netatmoApi = this.authenticateAndConfigureNetatmoApi(this.accessoryConfig);
+  }
+
+  shutdownNetatmoApi(netatmoApi: netatmo): void {
+    netatmoApi.on('error', null);
+    netatmoApi.on('warning', null);
+    netatmoApi.on('get-stationsdata', null);
+    netatmoApi.on('get-measure', null);
+  }
+
   authenticateAndConfigureNetatmoApi(accessoryConfig: AccessoryConfig): netatmo {
     const auth = {
       'client_id': accessoryConfig.netatmoClientId,
@@ -104,11 +126,8 @@ class VirtualLeakSensor implements AccessoryPlugin {
     const netatmoApi = new netatmo(auth);
 
     netatmoApi.on('error', this.handleNetatmoApiError.bind(this));
-
     netatmoApi.on('warning', this.handleNetatmoApiWarning.bind(this));
-
     netatmoApi.on('get-stationsdata', this.getDevices.bind(this));
-
     netatmoApi.on('get-measure', this.getMeasures.bind(this));
 
     return netatmoApi;
