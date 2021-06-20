@@ -103,7 +103,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
   }
 
   forceReauthenticationOfNetatmoApi(): void {
-    this.logging.debug('Reauthentication Netatmo API');
+    this.logging.debug('Reauthenticating Netatmo API');
     this.shutdownNetatmoApi(this.netatmoApi);
     this.netatmoApi = this.authenticateAndConfigureNetatmoApi(this.accessoryConfig);
   }
