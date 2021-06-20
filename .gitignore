@@ -1,6 +1,9 @@
 # Ignore compiled code
 dist
 
+# Ignore dev readme
+DEV_README.md
+
 # ------------- Defaults ------------- #
 
 # Logs

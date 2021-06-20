@@ -1,6 +1,9 @@
 # Ignore source code
 src
 
+# Ignore dev readme
+DEV_README.md
+
 # ------------- Defaults ------------- #
 
 # gitHub actions
