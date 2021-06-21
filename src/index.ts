@@ -109,10 +109,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
   }
 
   shutdownNetatmoApi(netatmoApi: netatmo): void {
-    netatmoApi.on('error', null);
-    netatmoApi.on('warning', null);
-    netatmoApi.on('get-stationsdata', null);
-    netatmoApi.on('get-measure', null);
+    netatmoApi.removeAllListeners();
   }
 
   authenticateAndConfigureNetatmoApi(accessoryConfig: AccessoryConfig): netatmo {
