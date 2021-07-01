@@ -170,7 +170,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
 
   handleLeakDetectedGet(): number {
     if(this.rainDetected) {
-      this.logging.debug('Rain detected!');
+      this.logging.info('Rain detected!');
       return hap.Characteristic.LeakDetected.LEAK_DETECTED;
     } else {
       this.logging.debug('No rain detected.');
