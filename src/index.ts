@@ -23,11 +23,13 @@ class VirtualLeakSensor implements AccessoryPlugin {
   private readonly pollingIntervalInSec: number;
   private readonly slidingWindowSizeInMinutes: number;
   private readonly reauthenticationIntervalInMs: number;
+  private readonly cooldownIntervalInMinutes: number;
   private netatmoApi: netatmo;
   private netatmoStationId?: string;
   private netatmoRainSensorId?: string;
   private rainDetected: boolean;
   private accessoryConfig: AccessoryConfig;
+  private IsInCooldown: boolean;
 
   constructor(logging: Logging, accessoryConfig: AccessoryConfig) {
     this.logging = logging;
@@ -37,6 +39,8 @@ class VirtualLeakSensor implements AccessoryPlugin {
     this.rainDetected = false;
     this.pollingIntervalInSec = accessoryConfig.pollingInterval;
     this.slidingWindowSizeInMinutes = accessoryConfig.slidingWindowSize;
+    this.cooldownIntervalInMinutes = accessoryConfig.cooldownInterval;
+    this.IsInCooldown = false;
 
     // Reauthenticate Netatmo API every 24 hours
     this.reauthenticationIntervalInMs = 24 * 60 * 60 * 1000;
@@ -89,17 +93,32 @@ class VirtualLeakSensor implements AccessoryPlugin {
   getMeasures(_error, measures): void {
     this.logging.debug(`Native output of measures: ${JSON.stringify(measures)}.`);
 
-    this.rainDetected = false;
+    if(this.IsInCooldown) {
+      this.logging.debug('Cooldown detected. Skipping this rain detection cycle.');
+    } else {
+      this.rainDetected = false;
 
-    measures.forEach(measure => {
-      measure.value.forEach(measuredValue => {
-        if(measuredValue > 0) {
-          this.rainDetected = true;
-        }
+      measures.forEach(measure => {
+        measure.value.forEach(measuredValue => {
+          if(measuredValue > 0) {
+            this.rainDetected = true;
+
+            if(this.cooldownIntervalInMinutes > 0) {
+              const cooldownIntervalInMs = this.cooldownIntervalInMinutes * 60 * 1000;
+
+              this.logging.debug(`Entering cooldown of ${cooldownIntervalInMs}ms.`);
+              this.IsInCooldown = true;
+
+              setTimeout(() => {
+                this.IsInCooldown = false;
+              }, cooldownIntervalInMs);
+            }
+          }
+        });
       });
-    });
 
-    this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
+      this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
+    }
   }
 
   forceReauthenticationOfNetatmoApi(): void {
