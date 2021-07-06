@@ -186,9 +186,14 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
     ];
   }
 
+  scheduleSwitchReset(): void {
+    setTimeout(() => this.handleSwitchOnSet(false), 500);
+  }
+
   handleSwitchOnGet(): boolean {
     if(this.rainDetected) {
       this.logging.info('Rain detected!');
+      this.scheduleSwitchReset();
       return true;
     } else {
       this.logging.debug('No rain detected.');
@@ -200,7 +205,7 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
   handleSwitchOnSet(value: CharacteristicValue): void {
     if(value) {
       this.logging.debug('Turn switch on.');
-      setTimeout(() => this.handleSwitchOnSet(false), 500);
+      this.scheduleSwitchReset();
     } else {
       this.logging.debug('Turn switch off.');
     }
