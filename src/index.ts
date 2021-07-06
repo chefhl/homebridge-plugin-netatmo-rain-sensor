@@ -109,9 +109,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
               this.logging.debug(`Entering cooldown of ${cooldownIntervalInMs}ms.`);
               this.IsInCooldown = true;
 
-              setTimeout(() => {
-                this.IsInCooldown = false;
-              }, cooldownIntervalInMs);
+              setTimeout(this.endCooldown.bind(this), cooldownIntervalInMs);
             }
           }
         });
@@ -119,6 +117,11 @@ class VirtualLeakSensor implements AccessoryPlugin {
 
       this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
     }
+  }
+
+  endCooldown(): void {
+    this.IsInCooldown = false;
+    this.logging.debug('Cooldown ended');
   }
 
   forceReauthenticationOfNetatmoApi(): void {
