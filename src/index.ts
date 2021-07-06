@@ -116,7 +116,7 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
         });
       });
 
-      this.switchService.updateCharacteristic(hap.Characteristic.On, this.handleSwitchOnGet());
+      this.handleSwitchOnSet(this.handleSwitchOnGet());
     }
   }
 
@@ -203,7 +203,8 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
       setTimeout(() => this.handleSwitchOnSet(false), 500);
     } else {
       this.logging.debug('Turn switch off.');
-      this.switchService.updateCharacteristic(hap.Characteristic.On, false);
     }
+
+    this.switchService.updateCharacteristic(hap.Characteristic.On, value);
   }
 }
