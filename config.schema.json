@@ -63,7 +63,7 @@
       "cooldownInterval": {
         "title": "Cooldown interval",
         "type": "integer",
-        "default": 0,
+        "default": 60,
         "oneOf": [
           { "title": "No cooldown", "enum": [0] },
           { "title": "30 minutes", "enum": [30] },
