@@ -199,8 +199,10 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
   // value is type boolean for the switch service
   handleSwitchOnSet(value: CharacteristicValue): void {
     if(value) {
+      this.logging.debug('Turn switch on.');
       setTimeout(() => this.handleSwitchOnSet(false), 500);
     } else {
+      this.logging.debug('Turn switch off.');
       this.switchService.updateCharacteristic(hap.Characteristic.On, false);
     }
   }
