@@ -2,6 +2,7 @@ import {
   AccessoryConfig,
   AccessoryPlugin,
   API,
+  CharacteristicValue,
   HAP,
   Logging,
   Service,
@@ -56,6 +57,8 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
     // Create handler for rain detection
     this.switchService.getCharacteristic(hap.Characteristic.On)
       .onGet(this.handleSwitchOnGet.bind(this));
+    this.switchService.getCharacteristic(hap.Characteristic.On)
+      .onSet(this.handleSwitchOnSet.bind(this));
 
     this.logging.info('Authenticating with the Netatmo API and configuring callbacks.');
     this.netatmoApi = this.authenticateAndConfigureNetatmoApi(accessoryConfig);
@@ -190,6 +193,15 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
     } else {
       this.logging.debug('No rain detected.');
       return false;
+    }
+  }
+
+  // value is type boolean for the switch service
+  handleSwitchOnSet(value: CharacteristicValue): void {
+    if(value) {
+      setTimeout(() => this.handleSwitchOnSet(false), 500);
+    } else {
+      this.switchService.updateCharacteristic(hap.Characteristic.On, false);
     }
   }
 }
