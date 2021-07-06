@@ -13,12 +13,12 @@ let hap: HAP;
 
 export = (api: API) => {
   hap = api.hap;
-  api.registerAccessory('homebridge-plugin-netatmo-rain-sensor', VirtualLeakSensor);
+  api.registerAccessory('homebridge-plugin-netatmo-rain-sensor', VirtualRainSensorSwitch);
 };
 
-class VirtualLeakSensor implements AccessoryPlugin {
+class VirtualRainSensorSwitch implements AccessoryPlugin {
   private readonly logging: Logging;
-  private readonly leakSensorService: Service;
+  private readonly switchService: Service;
   private readonly accessoryInformationService: Service;
   private readonly pollingIntervalInSec: number;
   private readonly slidingWindowSizeInMinutes: number;
@@ -45,19 +45,17 @@ class VirtualLeakSensor implements AccessoryPlugin {
     // Reauthenticate Netatmo API every 24 hours
     this.reauthenticationIntervalInMs = 24 * 60 * 60 * 1000;
 
-    // Create a new Leak Sensor Service
-    this.leakSensorService = new hap.Service.LeakSensor(accessoryConfig.name);
+    // Create a new Switch Sensor Service
+    this.switchService = new hap.Service.Switch(accessoryConfig.name);
 
     // Create a new Accessory Information Service
     this.accessoryInformationService = new hap.Service.AccessoryInformation()
       .setCharacteristic(hap.Characteristic.Manufacturer, 'Patrick Bär')
-      .setCharacteristic(hap.Characteristic.Model, 'Virtual Leak Sensor for Netatmo Rain Sensor');
+      .setCharacteristic(hap.Characteristic.Model, 'Virtual Switch for Netatmo Rain Sensor');
 
-    // Create handler for leak detection
-    this.leakSensorService.getCharacteristic(hap.Characteristic.LeakDetected)
-      .onGet(this.handleLeakDetectedGet.bind(this));
-    this.leakSensorService.getCharacteristic(hap.Characteristic.StatusActive)
-      .onGet(this.handleStatusActiveGet.bind(this));
+    // Create handler for rain detection
+    this.switchService.getCharacteristic(hap.Characteristic.On)
+      .onGet(this.handleSwitchOnGet.bind(this));
 
     this.logging.info('Authenticating with the Netatmo API and configuring callbacks.');
     this.netatmoApi = this.authenticateAndConfigureNetatmoApi(accessoryConfig);
@@ -115,7 +113,7 @@ class VirtualLeakSensor implements AccessoryPlugin {
         });
       });
 
-      this.leakSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
+      this.switchService.updateCharacteristic(hap.Characteristic.On, this.handleSwitchOnGet());
     }
   }
 
@@ -181,22 +179,17 @@ class VirtualLeakSensor implements AccessoryPlugin {
   getServices(): Service[] {
     return [
       this.accessoryInformationService,
-      this.leakSensorService,
+      this.switchService,
     ];
   }
 
-  handleStatusActiveGet(): boolean {
-    // Accessory is always active
-    return true;
-  }
-
-  handleLeakDetectedGet(): number {
+  handleSwitchOnGet(): boolean {
     if(this.rainDetected) {
       this.logging.info('Rain detected!');
-      return hap.Characteristic.LeakDetected.LEAK_DETECTED;
+      return true;
     } else {
       this.logging.debug('No rain detected.');
-      return hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+      return false;
     }
   }
 }
