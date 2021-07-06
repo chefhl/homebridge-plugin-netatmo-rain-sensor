@@ -162,21 +162,25 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
   }
 
   pollNetatmoApi(): void {
-    this.logging.debug('Polling the Netatmo API.');
-    const now = new Date().getTime();
-    const slidingWindowSizeInMillis = this.slidingWindowSizeInMinutes * 60 * 1000;
-    this.logging.debug(`Sliding window size in milliseconds: ${slidingWindowSizeInMillis}.`);
-    const options = {
-      device_id: this.netatmoStationId,
-      module_id: this.netatmoRainSensorId,
-      scale: '30min',
-      type: ['rain'],
-      date_begin: Math.floor(new Date(now - slidingWindowSizeInMillis).getTime()/1000),
-      optimize: true,
-      real_time: true,
-    };
-    this.logging.debug(`Native output of request options: ${JSON.stringify(options)}.`);
-    this.netatmoApi.getMeasure(options);
+    if(this.IsInCooldown) {
+      this.logging.debug('Cooldown detected. Skipping this rain detection cycle.');
+    } else {
+      this.logging.debug('Polling the Netatmo API.');
+      const now = new Date().getTime();
+      const slidingWindowSizeInMillis = this.slidingWindowSizeInMinutes * 60 * 1000;
+      this.logging.debug(`Sliding window size in milliseconds: ${slidingWindowSizeInMillis}.`);
+      const options = {
+        device_id: this.netatmoStationId,
+        module_id: this.netatmoRainSensorId,
+        scale: '30min',
+        type: ['rain'],
+        date_begin: Math.floor(new Date(now - slidingWindowSizeInMillis).getTime()/1000),
+        optimize: true,
+        real_time: true,
+      };
+      this.logging.debug(`Native output of request options: ${JSON.stringify(options)}.`);
+      this.netatmoApi.getMeasure(options);
+    }
   }
 
   getServices(): Service[] {
