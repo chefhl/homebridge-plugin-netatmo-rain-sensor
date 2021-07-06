@@ -195,13 +195,18 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
   }
 
   handleSwitchOnGet(): boolean {
-    if(this.rainDetected) {
-      this.logging.info('Rain detected!');
-      this.scheduleSwitchReset();
-      return true;
-    } else {
-      this.logging.debug('No rain detected.');
+    if(this.IsInCooldown) {
+      this.logging.debug('Rain detected is false during cooldown.');
       return false;
+    } else {
+      if(this.rainDetected) {
+        this.logging.info('Rain detected!');
+        this.scheduleSwitchReset();
+        return true;
+      } else {
+        this.logging.debug('No rain detected.');
+        return false;
+      }
     }
   }
 
