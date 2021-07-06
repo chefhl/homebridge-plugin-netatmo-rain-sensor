@@ -103,15 +103,6 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
         measure.value.forEach(measuredValue => {
           if(measuredValue > 0) {
             this.rainDetected = true;
-
-            if(this.cooldownIntervalInMinutes > 0) {
-              const cooldownIntervalInMs = this.cooldownIntervalInMinutes * 60 * 1000;
-
-              this.logging.debug(`Entering cooldown of ${cooldownIntervalInMs}ms.`);
-              this.IsInCooldown = true;
-
-              setTimeout(this.endCooldown.bind(this), cooldownIntervalInMs);
-            }
           }
         });
       });
@@ -201,6 +192,16 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
     } else {
       if(this.rainDetected) {
         this.logging.info('Rain detected!');
+
+        if(this.cooldownIntervalInMinutes > 0) {
+          const cooldownIntervalInMs = this.cooldownIntervalInMinutes * 60 * 1000;
+
+          this.logging.debug(`Entering cooldown of ${cooldownIntervalInMs}ms.`);
+          this.IsInCooldown = true;
+
+          setTimeout(this.endCooldown.bind(this), cooldownIntervalInMs);
+        }
+
         this.scheduleSwitchReset();
         return true;
       } else {
