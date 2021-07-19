@@ -3,7 +3,7 @@
 </p>
 
 ## Homebridge Plugin for the Netatmo Rain Sensor
-This Homebridge Plugin makes the Netatmo Rain Sensor accessible to HomeKit as a Leak Sensor.
+This Homebridge Plugin makes the Netatmo Rain Sensor accessible to HomeKit as a Switch.
 This makes it possible to use the Netatmo Rain Sensor for all kinds of automations based on rain detection.
 
 ## Important Notes
@@ -28,6 +28,6 @@ Note that right now only one Netatmo Rain Sensor is supported so it does not mak
 ## Additional Information
 HomeKit does not support rain sensors natively right now. Therefore your Netatmo rain sensor is shown as "unsupported" in the Home App and cannot be used for automations. This is a little sad because rain detection can be the trigger for all kinds of meaningful automations.
 
-This plugin basically "wraps" the Netatmo Rain Sensor in the form of a Water Leak Sensor which is a device category natively supported by HomeKit. The trigger "Leak Detected" can now act as a starting point for automations.
+This plugin basically "wraps" the Netatmo Rain Sensor in the form of a Switch which is a device category natively supported by HomeKit. The trigger "Switch On" can now act as a starting point for automations.
 
-The way this works is that this plugin polls the Netatmo API periodically in the background and triggers the "Leak Detected" status when rain was detected by the sensor.
+The way this works is that this plugin polls the Netatmo API periodically in the background and triggers the "Switch On" status when rain was detected by the sensor.

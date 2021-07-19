@@ -2,7 +2,7 @@
   "displayName": "Homebridge Netatmo Rain Sensor",
   "name": "homebridge-plugin-netatmo-rain-sensor",
   "version": "1.0.17-beta.0",
-  "description": "This Homebridge Plugin makes the Netatmo Rain Sensor accessible to HomeKit as a Leak Sensor. This makes it possible to use the Netatmo Rain Sensor for all kinds of automations based on rain detection.",
+  "description": "This Homebridge Plugin makes the Netatmo Rain Sensor accessible to HomeKit as a Switch. This makes it possible to use the Netatmo Rain Sensor for all kinds of automations based on rain detection.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
