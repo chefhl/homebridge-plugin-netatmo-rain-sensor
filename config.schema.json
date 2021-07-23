@@ -11,6 +11,17 @@
         "required": true,
         "default": "Homebridge Netatmo Rain Sensor"
       },
+      "deviceType": {
+        "title": "Device Type",
+        "type": "string",
+        "required": true,
+        "default": "Switch",
+        "oneOf": [
+          { "title": "Switch", "enum": ["Switch"] },
+          { "title": "Leak Sensor", "enum": ["Leak"] }
+        ],
+        "description": "Defines the type of the device that the Netatmo Rain Sensor is exposed as in Homebridge. Both types can be triggers for automations. Leak Sensors additionally trigger a push notification in iOS though."
+      },
       "netatmoUsername": {
         "title": "Netatmo Username",
         "type": "string",
