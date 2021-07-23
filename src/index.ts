@@ -14,13 +14,19 @@ let hap: HAP;
 
 export = (api: API) => {
   hap = api.hap;
-  api.registerAccessory('homebridge-plugin-netatmo-rain-sensor', VirtualRainSensorSwitch);
+  api.registerAccessory('homebridge-plugin-netatmo-rain-sensor', VirtualRainSensorPlugin);
 };
 
-class VirtualRainSensorSwitch implements AccessoryPlugin {
+enum VirtualRainSensorDeviceType {
+  Switch,
+  Leak
+}
+
+class VirtualRainSensorPlugin implements AccessoryPlugin {
   private readonly logging: Logging;
-  private readonly switchService: Service;
+  private readonly virtualRainSensorService: Service;
   private readonly accessoryInformationService: Service;
+  private readonly deviceType: VirtualRainSensorDeviceType;
   private readonly pollingIntervalInSec: number;
   private readonly slidingWindowSizeInMinutes: number;
   private readonly reauthenticationIntervalInMs: number;
@@ -29,7 +35,7 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
   private netatmoStationId?: string;
   private netatmoRainSensorId?: string;
   private rainDetected: boolean;
-  private accessoryConfig: AccessoryConfig;
+  private readonly accessoryConfig: AccessoryConfig;
   private IsInCooldown: boolean;
 
   constructor(logging: Logging, accessoryConfig: AccessoryConfig) {
@@ -38,6 +44,8 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
     this.netatmoStationId = undefined;
     this.netatmoRainSensorId = undefined;
     this.rainDetected = false;
+    this.deviceType = this.initializeDeviceType(accessoryConfig.deviceType);
+    this.virtualRainSensorService = this.createAndConfigureService(this.deviceType);
     this.pollingIntervalInSec = accessoryConfig.pollingInterval;
     this.slidingWindowSizeInMinutes = accessoryConfig.slidingWindowSize;
     this.cooldownIntervalInMinutes = accessoryConfig.cooldownInterval;
@@ -46,25 +54,48 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
     // Reauthenticate Netatmo API every 24 hours
     this.reauthenticationIntervalInMs = 24 * 60 * 60 * 1000;
 
-    // Create a new Switch Sensor Service
-    this.switchService = new hap.Service.Switch(accessoryConfig.name);
-
     // Create a new Accessory Information Service
     this.accessoryInformationService = new hap.Service.AccessoryInformation()
       .setCharacteristic(hap.Characteristic.Manufacturer, 'Patrick Bär')
-      .setCharacteristic(hap.Characteristic.Model, 'Virtual Switch for Netatmo Rain Sensor');
-
-    // Create handler for rain detection
-    this.switchService.getCharacteristic(hap.Characteristic.On)
-      .onGet(this.handleSwitchOnGet.bind(this));
-    this.switchService.getCharacteristic(hap.Characteristic.On)
-      .onSet(this.handleSwitchOnSet.bind(this));
+      .setCharacteristic(hap.Characteristic.Model, 'Virtual Device for Netatmo Rain Sensor');
 
     this.logging.info('Authenticating with the Netatmo API and configuring callbacks.');
     this.netatmoApi = this.authenticateAndConfigureNetatmoApi(accessoryConfig);
 
     this.logging.info('Looking for Netatmo Rain Sensor and setting up polling schedule.');
     this.netatmoApi.getStationsData();
+  }
+
+  createAndConfigureService(deviceType: VirtualRainSensorDeviceType): Service {
+    let localVirtualRainSensorService: Service;
+
+    if(deviceType === VirtualRainSensorDeviceType.Switch) {
+      // Create a new Switch Sensor Service
+      localVirtualRainSensorService = new hap.Service.Switch(this.accessoryConfig.name);
+
+      // Create handler for rain detection
+      localVirtualRainSensorService.getCharacteristic(hap.Characteristic.On)
+        .onGet(this.handleSwitchOnGet.bind(this));
+      localVirtualRainSensorService.getCharacteristic(hap.Characteristic.On)
+        .onSet(this.handleSwitchOnSet.bind(this));
+    } else {
+      // Create a new Leak Sensor Service
+      localVirtualRainSensorService = new hap.Service.LeakSensor(this.accessoryConfig.name);
+
+      // Create handler for leak detection
+      localVirtualRainSensorService.getCharacteristic(hap.Characteristic.LeakDetected)
+        .onGet(this.handleLeakDetectedGet.bind(this));
+    }
+
+    return localVirtualRainSensorService;
+  }
+
+  initializeDeviceType(deviceTypeAsString: string): VirtualRainSensorDeviceType {
+    if(deviceTypeAsString === 'Switch') {
+      return VirtualRainSensorDeviceType.Switch;
+    } else {
+      return VirtualRainSensorDeviceType.Leak;
+    }
   }
 
   getDevices(_error, devices): void {
@@ -107,7 +138,11 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
         });
       });
 
-      this.handleSwitchOnSet(this.handleSwitchOnGet());
+      if(this.deviceType === VirtualRainSensorDeviceType.Switch) {
+        this.handleSwitchOnSet(this.handleSwitchOnGet());
+      } else {
+        this.virtualRainSensorService.updateCharacteristic(hap.Characteristic.LeakDetected, this.handleLeakDetectedGet());
+      }
     }
   }
 
@@ -177,12 +212,22 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
   getServices(): Service[] {
     return [
       this.accessoryInformationService,
-      this.switchService,
+      this.virtualRainSensorService,
     ];
   }
 
   scheduleSwitchReset(): void {
-    setTimeout(() => this.handleSwitchOnSet(false), 500);
+    if(this.deviceType === VirtualRainSensorDeviceType.Switch) {
+      setTimeout(() => this.handleSwitchOnSet(false), 500);
+    }
+  }
+
+  handleLeakDetectedGet(): number {
+    if(this.handleSwitchOnGet()) {
+      return hap.Characteristic.LeakDetected.LEAK_DETECTED;
+    } else {
+      return hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+    }
   }
 
   handleSwitchOnGet(): boolean {
@@ -220,6 +265,6 @@ class VirtualRainSensorSwitch implements AccessoryPlugin {
       this.logging.debug('Turn switch off.');
     }
 
-    this.switchService.updateCharacteristic(hap.Characteristic.On, value);
+    this.virtualRainSensorService.updateCharacteristic(hap.Characteristic.On, value);
   }
 }
