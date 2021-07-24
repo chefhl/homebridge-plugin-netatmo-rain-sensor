@@ -78,6 +78,8 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
         .onGet(this.handleSwitchOnGet.bind(this));
       localVirtualRainSensorService.getCharacteristic(hap.Characteristic.On)
         .onSet(this.handleSwitchOnSet.bind(this));
+
+      this.logging.info('Exposing the Netatmo Rain Sensor as a Switch.');
     } else {
       // Create a new Leak Sensor Service
       localVirtualRainSensorService = new hap.Service.LeakSensor(this.accessoryConfig.name);
@@ -85,6 +87,8 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
       // Create handler for leak detection
       localVirtualRainSensorService.getCharacteristic(hap.Characteristic.LeakDetected)
         .onGet(this.handleLeakDetectedGet.bind(this));
+
+      this.logging.info('Exposing the Netatmo Rain Sensor as a Leak Sensor.');
     }
 
     return localVirtualRainSensorService;
