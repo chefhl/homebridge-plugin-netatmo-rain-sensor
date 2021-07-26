@@ -3,7 +3,7 @@
 </p>
 
 ## Homebridge Plugin for the Netatmo Rain Sensor
-This Homebridge Plugin makes the Netatmo Rain Sensor accessible to HomeKit as a Switch.
+This Homebridge Plugin makes the Netatmo Rain Sensor accessible to HomeKit as a Switch or Leak Sensor.
 This makes it possible to use the Netatmo Rain Sensor for all kinds of automations based on rain detection.
 
 ## Important Notes
@@ -28,6 +28,11 @@ Note that right now only one Netatmo Rain Sensor is supported so it does not mak
 ## Additional Information
 HomeKit does not support rain sensors natively right now. Therefore your Netatmo rain sensor is shown as "unsupported" in the Home App and cannot be used for automations. This is a little sad because rain detection can be the trigger for all kinds of meaningful automations.
 
-This plugin basically "wraps" the Netatmo Rain Sensor in the form of a Switch which is a device category natively supported by HomeKit. The trigger "Switch On" can now act as a starting point for automations.
+This plugin basically "wraps" the Netatmo Rain Sensor in the form of a Switch or Leak Sensor which is a device category natively supported by HomeKit. The trigger "Switch On" or "Leak detected" can now act as a starting point for automations.
 
-The way this works is that this plugin polls the Netatmo API periodically in the background and triggers the "Switch On" status when rain was detected by the sensor.
+The way this works is that this plugin polls the Netatmo API periodically in the background and triggers the "Switch On" or "Leak detected" status when rain was detected by the sensor.
+
+## Version History
++ 2.1.0: It is now possible to configure if the Netatmo Rain Sensor is represented as a Switch or a Leak Sensor in HomeKit with "Switch" being the default.
++ 2.0.0: Changed the Netatmo Rain Sensor representation to "Switch" to prevent iOS integrated "Leak Sensor" alerts. Introduced a configurable "Cooldown perdiod" to prevent API polling and rain detection for a certain amount of time after rain was detected.
++ 1.0.6: First stable release that represents the Netatmo Rain Sensor as a "Leak Sensor".
