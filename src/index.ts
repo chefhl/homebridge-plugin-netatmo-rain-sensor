@@ -95,7 +95,7 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
   }
 
   initializeDeviceType(deviceTypeAsString: string): VirtualRainSensorDeviceType {
-    if(deviceTypeAsString === 'Switch') {
+    if(!deviceTypeAsString || deviceTypeAsString === '' || deviceTypeAsString === 'Switch') {
       return VirtualRainSensorDeviceType.Switch;
     } else {
       return VirtualRainSensorDeviceType.Leak;
