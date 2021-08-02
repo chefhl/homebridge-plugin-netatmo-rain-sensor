@@ -9,6 +9,7 @@ import {
 } from 'homebridge';
 
 import netatmo from 'netatmo';
+import { access } from 'node:fs';
 
 let hap: HAP;
 
@@ -31,6 +32,7 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
   private readonly slidingWindowSizeInMinutes: number;
   private readonly reauthenticationIntervalInMs: number;
   private readonly cooldownIntervalInMinutes: number;
+  private readonly rainSensorSerial: string;
   private netatmoApi: netatmo;
   private netatmoStationId?: string;
   private netatmoRainSensorId?: string;
@@ -49,6 +51,7 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
     this.pollingIntervalInSec = accessoryConfig.pollingInterval;
     this.slidingWindowSizeInMinutes = accessoryConfig.slidingWindowSize;
     this.cooldownIntervalInMinutes = accessoryConfig.cooldownInterval;
+    this.rainSensorSerial = accessoryConfig.rainSensorSerial;
     this.IsInCooldown = false;
 
     // Reauthenticate Netatmo API every 24 hours
@@ -106,6 +109,9 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
     devices.forEach(device => {
       device.modules.forEach(module => {
         if(module.type === 'NAModule3') {
+          if(this.rainSensorSerial) {
+            this.logging.debug(`Found Netatmo Rain Sensor named "${module.module_name}". Checking serial number.`);
+          }
           this.logging.info(`Found first Netatmo Rain Sensor named "${module.module_name}". Using this Rain Sensor.`);
           this.netatmoStationId = device._id;
           this.netatmoRainSensorId = module._id;

@@ -83,6 +83,12 @@
         ],
         "required": true,
         "description": "This interval defines the time after a rain detection in which no rain detection is triggered."
+      },
+      "rainSensorSerial": {
+        "title": "Rain sensor serial number",
+        "type": "string",
+        "required": false,
+        "description": "Serial number of rain sensor as shown in the Apple Home app e.g. g7257d3"
       }
     }
   }
