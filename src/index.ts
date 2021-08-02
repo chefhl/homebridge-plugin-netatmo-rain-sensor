@@ -9,7 +9,6 @@ import {
 } from 'homebridge';
 
 import netatmo from 'netatmo';
-import { access } from 'node:fs';
 
 let hap: HAP;
 
