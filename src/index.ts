@@ -110,10 +110,22 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
         if(module.type === 'NAModule3') {
           if(this.rainSensorSerial) {
             this.logging.debug(`Found Netatmo Rain Sensor named "${module.module_name}". Checking serial number.`);
+            this.netatmoStationId = device._id;
+            this.netatmoRainSensorId = module._id;
+            let currentRainSensorSerial: string = module._id;
+            currentRainSensorSerial = currentRainSensorSerial.substring(9);
+            currentRainSensorSerial = currentRainSensorSerial.replace(':', '');
+            if(this.rainSensorSerial === currentRainSensorSerial) {
+              // eslint-disable-next-line max-len
+              this.logging.info(`Found Netatmo Rain Sensor named "${module.module_name}" with serial number "${this.rainSensorSerial}". Using this Rain Sensor.`);
+              return;
+            }
+          } else {
+            this.logging.info(`Found first Netatmo Rain Sensor named "${module.module_name}". Using this Rain Sensor.`);
+            this.netatmoStationId = device._id;
+            this.netatmoRainSensorId = module._id;
+            return;
           }
-          this.logging.info(`Found first Netatmo Rain Sensor named "${module.module_name}". Using this Rain Sensor.`);
-          this.netatmoStationId = device._id;
-          this.netatmoRainSensorId = module._id;
         }
       });
     });
