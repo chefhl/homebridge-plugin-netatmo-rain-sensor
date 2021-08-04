@@ -105,30 +105,45 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
   }
 
   getDevices(_error, devices): void {
-    devices.forEach(device => {
-      device.modules.forEach(module => {
-        if(module.type === 'NAModule3') {
-          if(this.rainSensorSerial) {
-            this.logging.debug(`Found Netatmo Rain Sensor named "${module.module_name}". Checking serial number.`);
-            this.netatmoStationId = device._id;
-            this.netatmoRainSensorId = module._id;
+    // Search with serial number
+    if(this.rainSensorSerial) {
+      devices.forEach(device => {
+        device.modules.forEach(module => {
+          if(module.type === 'NAModule3') {
             let currentRainSensorSerial: string = module._id;
             currentRainSensorSerial = currentRainSensorSerial.substring(9);
             currentRainSensorSerial = currentRainSensorSerial.replace(':', '');
+            this.logging.debug(`Found Netatmo Rain Sensor named "${module.module_name}" with serial number "${currentRainSensorSerial}".`);
+
             if(this.rainSensorSerial === currentRainSensorSerial) {
               // eslint-disable-next-line max-len
               this.logging.info(`Found Netatmo Rain Sensor named "${module.module_name}" with serial number "${this.rainSensorSerial}". Using this Rain Sensor.`);
-              return;
+              this.netatmoStationId = device._id;
+              this.netatmoRainSensorId = module._id;
             }
-          } else {
-            this.logging.info(`Found first Netatmo Rain Sensor named "${module.module_name}". Using this Rain Sensor.`);
+          }
+        });
+      });
+
+      if(!this.netatmoRainSensorId) {
+        // eslint-disable-next-line max-len
+        this.logging.warn(`Found no Netatmo Rain Sensor with serial number "${this.rainSensorSerial}". Trying to find default Rain Sensor.`);
+      }
+    }
+
+    // Default rain sensor search in case no serial or no rain sensor found with serial
+    if(!this.netatmoRainSensorId) {
+      devices.forEach(device => {
+        device.modules.forEach(module => {
+          if(module.type === 'NAModule3') {
+            this.logging.info(`Found Netatmo Rain Sensor named "${module.module_name}". Using this Rain Sensor.`);
             this.netatmoStationId = device._id;
             this.netatmoRainSensorId = module._id;
-            return;
           }
-        }
+        });
       });
-    });
+    }
+
     if(this.netatmoRainSensorId !== undefined) {
       // Create recurring timer for Netatmo API reauthentication
       setInterval(this.forceReauthenticationOfNetatmoApi.bind(this), this.reauthenticationIntervalInMs);
