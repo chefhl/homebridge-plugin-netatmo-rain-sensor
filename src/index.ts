@@ -113,7 +113,8 @@ class VirtualRainSensorPlugin implements AccessoryPlugin {
             let currentRainSensorSerial: string = module._id;
             currentRainSensorSerial = currentRainSensorSerial.substring(9);
             currentRainSensorSerial = currentRainSensorSerial.replace(RegExp(':', 'g'), '');
-            this.logging.debug(`Found Netatmo Rain Sensor named "${module.module_name}" with serial number "${currentRainSensorSerial}".`);
+            // eslint-disable-next-line max-len
+            this.logging.debug(`Found Netatmo Rain Sensor named "${module.module_name}" with partial serial number "${currentRainSensorSerial}".`);
 
             // Ignore first char for comparison
             if(this.rainSensorSerial.substring(1) === currentRainSensorSerial) {
