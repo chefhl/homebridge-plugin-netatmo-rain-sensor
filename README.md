@@ -1,3 +1,7 @@
+[![npm](https://badgen.net/npm/v/homebridge-plugin-netatmo-rain-sensor/latest?icon=npm&label)](https://www.npmjs.com/package/homebridge-plugin-netatmo-rain-sensor)
+[![npm](https://badgen.net/npm/dt/homebridge-plugin-netatmo-rain-sensor?label=downloads)](https://www.npmjs.com/package/homebridge-plugin-netatmo-rain-sensor)
+[![Donate](https://badgen.net/badge/donate/paypal/cyan)](https://paypal.me/pbaer79)
+
 <p align="center">
 <img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
 </p>
