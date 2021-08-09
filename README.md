@@ -1,5 +1,6 @@
 [![npm](https://badgen.net/npm/v/homebridge-plugin-netatmo-rain-sensor/latest?icon=npm&label=latest)](https://www.npmjs.com/package/homebridge-plugin-netatmo-rain-sensor)
 [![npm](https://badgen.net/npm/dt/homebridge-plugin-netatmo-rain-sensor?icon=npm&label=downloads)](https://www.npmjs.com/package/homebridge-plugin-netatmo-rain-sensor)
+[![github](https://badgen.net/badge/github/home/purple?icon=github)](https://github.com/chefhl/homebridge-plugin-netatmo-rain-sensor)
 [![Donate](https://badgen.net/badge/donate/paypal/cyan?icon=buymeacoffee)](https://paypal.me/pbaer79)
 
 <p align="center">
