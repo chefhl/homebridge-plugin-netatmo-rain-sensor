@@ -1,5 +1,7 @@
 # Version History
 All notable changes to this project will be documented in this file. This project uses [Semantic Versioning](https://semver.org/).
+## 2.2.1 (2021-08-08)
++ Updated documentation.
 ## 2.2.0 (2021-08-06)
 + It is now possible to specify the serial number of a specific rain sensor. Thus multiple rain sensors can be tracked as well.
 ## 2.1.0 (2021-07-26)
